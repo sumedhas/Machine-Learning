@@ -211,9 +211,6 @@ def nnObjFunction(params, *args):
     # delta=(y-yhat)
     delta = ol - training_label
 
-    error = training_label * np.log(ol) + (1-train_label) * np.log((1 - ol))
-    print(error)
-
     # gradient decent w2
     w2_gradient = np.dot(delta.T, zj)
 
