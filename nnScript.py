@@ -2,6 +2,8 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
+import pickle
+import time
 
 
 def initializeWeights(n_in, n_out):
@@ -25,7 +27,7 @@ def sigmoid(z):
     """# Notice that z can be a scalar, a vector or a matrix
     # return the sigmoid of input z"""
 
-    return  # your code here
+    return 1.0 / (1.0 + np.exp(-z))
 
 
 def preprocess():
@@ -34,15 +36,15 @@ def preprocess():
      the MNIST data set from file 'mnist_all.mat'.
 
      Output:
-     train_data: matrix of training set. Each row of train_data contains 
+     train_data: matrix of training set. Each row of train_data contains
        feature vector of a image
      train_label: vector of label corresponding to each image in the training
        set
-     validation_data: matrix of training set. Each row of validation_data 
+     validation_data: matrix of training set. Each row of validation_data
        contains feature vector of a image
-     validation_label: vector of label corresponding to each image in the 
+     validation_label: vector of label corresponding to each image in the
        training set
-     test_data: matrix of training set. Each row of test_data contains 
+     test_data: matrix of training set. Each row of test_data contains
        feature vector of a image
      test_label: vector of label corresponding to each image in the testing
        set
@@ -133,9 +135,9 @@ def preprocess():
 
 
 def nnObjFunction(params, *args):
-    """% nnObjFunction computes the value of objective function (negative log 
-    %   likelihood error function with regularization) given the parameters 
-    %   of Neural Networks, thetraining data, their corresponding training 
+    """% nnObjFunction computes the value of objective function (negative log
+    %   likelihood error function with regularization) given the parameters
+    %   of Neural Networks, thetraining data, their corresponding training
     %   labels and lambda - regularization hyper-parameter.
 
     % Input:
@@ -170,6 +172,15 @@ def nnObjFunction(params, *args):
     %     w2(i, j) represents the weight of connection from unit j in hidden 
     %     layer to unit i in output layer."""
 
+
+    # Forward propagation of a training pattern's input through the neural network
+    # in order to generate the network's output value(s).
+    #
+    # Backward propagation of the propagation's output activations through the neural network
+    # using the training pattern target in order to generate the deltas
+    # (the difference between the targeted and actual output values) of all output and hidden neurons.
+
+
     n_input, n_hidden, n_class, training_data, training_label, lambdaval = args
 
     w1 = params[0:n_hidden * (n_input + 1)].reshape((n_hidden, (n_input + 1)))
@@ -177,13 +188,45 @@ def nnObjFunction(params, *args):
     obj_val = 0
 
     # Your code here
-    #
-    #
-    #
-    #
-    #
+
+    # Forward Propagation
+    # let aj = 1<=j<=m and zj = output from the hidden unit j
+
+    # Stack 1-D arrays as columns into a 2-D array.
+    a = np.array(training_data)
+    b = np.array(np.ones(training_data.shape[0]))
+    # bias
+    training_data = np.column_stack((a,b))
+
+    # Feed forward pass from input to hidden layer
+    # Dot product of two arrays. rever to 3.2.3 (2)
+    zj = sigmoid(np.dot(training_data, w1.T))
+
+    # bias
+    zj = np.column_stack((zj, np.ones(zj.shape[0])))
+    # Feed from hidden to output layer
+    ol = sigmoid(np.dot(zj, w2.T))
+
+    # Error function and Back propogation
+    # delta=(y-yhat)
+    delta = ol - training_label
+
+    error = training_label * np.log(ol) + (1-train_label) * np.log((1 - ol))
+    print(error)
+
+    # gradient decent w2
+    w2_gradient = np.dot(delta.T, zj)
+
+    # using formula from (11 & 12)
+    sum = np.dot(delta,w2)
+    w1_gradient = np.dot(((1 - zj) * zj * sum.T), training_data)
 
 
+
+
+    # Regularization in Neural Network - return obj_value and obj_gradient
+    # obj val
+    # obj grad
 
     # Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     # you would use code similar to the one below to create a flat array
@@ -217,6 +260,7 @@ def nnPredict(w1, w2, data):
 
 
 """**************Neural Network Script Starts here********************************"""
+timer = time.time()
 
 train_data, train_label, validation_data, validation_label, test_data, test_label = preprocess()
 
@@ -277,3 +321,7 @@ predicted_label = nnPredict(w1, w2, test_data)
 # find the accuracy on Validation Dataset
 
 print('\n Test set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
+
+getTime = time.time()-timer
+print('\n It took: ' + str(getTime)+ 'seconds to complete')
+
