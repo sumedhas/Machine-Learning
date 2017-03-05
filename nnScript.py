@@ -225,8 +225,8 @@ def nnObjFunction(params, *args):
 
     # calculating obj_val
     n = training_data.shape[0]
-    error = np.sum((-1 * (training_label * np.log(ol)) + (1 - training_label) * (np.log(1 - ol)))/n)
-    obj_val = error + ((lambdaval / 2 * n) * (np.sum(np.square(w1)) + np.sum(np.square(w2))))
+    error = (np.sum((-1 * (training_label * np.log(ol)) + (1 - training_label) * (np.log(1 - ol)))) / n)
+    obj_val = error + ((lambdaval / (2 * n)) * (np.sum(np.square(w1)) + np.sum(np.square(w2))))
 
     # Regularization in Neural Network - return obj_value and obj_gradient
     # obj val
@@ -235,10 +235,15 @@ def nnObjFunction(params, *args):
     # Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     # you would use code similar to the one below to create a flat array
 
+    w2_gradient = np.sum(w2_gradient + (lambdaval * w2))
+    w2_gradient = w2_gradient/n
+
+    w1_gradient = np.sum(w1_gradient + (lambdaval * w1))
+    w1_gradient = w1_gradient / n
+
     # calculating obj_grad
-    obj_grad = np.concatenate((w1_gradient.flatten(), w2_gradient.flatten()),0)
     obj_grad = np.array([])
-    obj_grad = obj_grad / n
+    obj_grad = np.concatenate((w1_gradient.flatten(), w2_gradient.flatten()), 0)
 
     return (obj_val, obj_grad)
 
