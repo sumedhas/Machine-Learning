@@ -129,6 +129,14 @@ def preprocess():
     # Feature selection
     # Your code here.
 
+    #Use train_data to identify the columns that need to be removed.
+    remove = np.all(train_data==train_data[0,:], axis=0)
+    
+    #Remove those columns from train, test, and validation data.
+    train_data = train_data[:,~remove]
+    validation_data = validation_data[:,~remove]
+    test_data = test_data[:,~remove]
+
     print('preprocess done')
 
     return train_data, train_label, validation_data, validation_label, test_data, test_label
@@ -267,6 +275,24 @@ def nnPredict(w1, w2, data):
 
     labels = np.array([])
     # Your code here
+    #adding bias node in input vector
+    bias = np.ones(len(data))
+    data=np.column_stack([data,bias])   
+    #compute data*wtrans for input to hidden
+    ans1 = data.dot(w1.T)    
+    #compute sigmoid of data*wtrans
+    sig1 = sigmoid(ans1)
+    #adding bias node in hidden vector
+    sig_bias=np.ones(len(data))
+    sig1=np.column_stack([sig1,sig_bias])    
+    #compute sig1*wtrans for hidden to output
+    ol = sig1.dot(w2.T)
+    #compute sigmoid of sig1*wtrans
+    sig2 = sigmoid(ol)
+    #selecting max value for predicted label
+    for each in range(sig2.shape[0]):
+        label[each] = np.argmax(sig2[each])       
+
 
     return labels
 
