@@ -14,8 +14,8 @@ def initializeWeights(n_in, n_out):
     # Input:
     # n_in: number of nodes of the input layer
     # n_out: number of nodes of the output layer
-       
-    # Output: 
+
+    # Output:
     # W: matrix of random initial weights with size (n_out x (n_in + 1))"""
 
     epsilon = sqrt(6) / sqrt(n_in + n_out + 1)
@@ -129,13 +129,13 @@ def preprocess():
     # Feature selection
     # Your code here.
 
-    #Use train_data to identify the columns that need to be removed.
-    remove = np.all(train_data==train_data[0,:], axis=0)
-    
-    #Remove those columns from train, test, and validation data.
-    train_data = train_data[:,~remove]
-    validation_data = validation_data[:,~remove]
-    test_data = test_data[:,~remove]
+    # Use train_data to identify the columns that need to be removed.
+    remove = np.all(train_data == train_data[0, :], axis=0)
+
+    # Remove those columns from train, test, and validation data.
+    train_data = train_data[:, ~remove]
+    validation_data = validation_data[:, ~remove]
+    test_data = test_data[:, ~remove]
 
     print('preprocess done')
 
@@ -163,8 +163,8 @@ def nnObjFunction(params, *args):
     %     in the vector represents the truth label of its corresponding image.
     % lambda: regularization hyper-parameter. This value is used for fixing the
     %     overfitting problem.
-       
-    % Output: 
+
+    % Output:
     % obj_val: a scalar value representing value of error function
     % obj_grad: a SINGLE vector of gradient value of error function
     % NOTE: how to compute obj_grad
@@ -174,12 +174,11 @@ def nnObjFunction(params, *args):
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % reshape 'params' vector into 2 matrices of weight w1 and w2
     % w1: matrix of weights of connections from input layer to hidden layers.
-    %     w1(i, j) represents the weight of connection from unit j in input 
+    %     w1(i, j) represents the weight of connection from unit j in input
     %     layer to unit i in hidden layer.
     % w2: matrix of weights of connections from hidden layer to output layers.
-    %     w2(i, j) represents the weight of connection from unit j in hidden 
+    %     w2(i, j) represents the weight of connection from unit j in hidden
     %     layer to unit i in output layer."""
-
 
     # Forward propagation of a training pattern's input through the neural network
     # in order to generate the network's output value(s).
@@ -191,49 +190,48 @@ def nnObjFunction(params, *args):
 
     n_input, n_hidden, n_class, training_data, training_label, lambdaval = args
 
+    # 1-of-K coding scheme
+    oneOfK = np.zeros((training_label.shape[0], 10))
+    oneOfK[np.arange(training_label.shape[0], dtype="int"), training_label.astype(int)] = 1
+    training_label = oneOfK
+
     w1 = params[0:n_hidden * (n_input + 1)].reshape((n_hidden, (n_input + 1)))
     w2 = params[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
     obj_val = 0
 
     # Your code here
-
     # Forward Propagation
-    # let aj = 1<=j<=m and zj = output from the hidden unit j
-
-    # Stack 1-D arrays as columns into a 2-D array.
     a = np.array(training_data)
     b = np.array(np.ones(training_data.shape[0]))
-    # bias
-    training_data = np.column_stack((a,b))
+
+    # Bias
+    training_data = np.column_stack((a, b))
 
     # Feed forward pass from input to hidden layer
     # Dot product of two arrays. rever to 3.2.3 (2)
     zj = sigmoid(np.dot(training_data, w1.T))
 
-    # bias
+    # Bias
     zj = np.column_stack((zj, np.ones(zj.shape[0])))
     # Feed from hidden to output layer
     ol = sigmoid(np.dot(zj, w2.T))
 
     # Error function and Back propogation
-    # delta=(y-yhat)
+    # Delta=(y-yhat)
     delta = ol - training_label
 
-    # gradient decent w2
+    # Gradient decent w2
     w2_gradient = np.dot(delta.T, zj)
 
-    # using formula from (11 & 12)
+    # Using formula from (11 & 12)
     w1_gradient = np.dot(((1 - zj) * zj * (np.dot(delta, w2))).T, training_data)
 
-    '''
-    eta = 0.1
-    w2 = w2 - eta*(np.gradient(w2))
-    w1 = w1 - eta*(np.gradient(w1))
-    '''
+    # Remove zero row
+    w1_gradient = np.delete(w1_gradient, n_hidden, 0)
 
     # calculating obj_val
     n = training_data.shape[0]
-    error = (np.sum((-1 * (training_label * np.log(ol)) + (1 - training_label) * (np.log(1 - ol)))) / n)
+    error = (np.sum(-1 * (training_label * np.log(ol) + (1 - training_label) * np.log(1 - ol)))) / n
     obj_val = error + ((lambdaval / (2 * n)) * (np.sum(np.square(w1)) + np.sum(np.square(w2))))
 
     # Regularization in Neural Network - return obj_value and obj_gradient
@@ -243,12 +241,11 @@ def nnObjFunction(params, *args):
     # Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     # you would use code similar to the one below to create a flat array
 
-    w2_gradient = np.sum(w2_gradient + (lambdaval * w2))
-    w2_gradient = w2_gradient/n
-
-    w1_gradient = np.sum(w1_gradient + (lambdaval * w1))
-    w1_gradient = w1_gradient / n
-
+    # Partial derivative of new objective function with respect to weight hidden to output layer
+    w2_gradient = (w2_gradient + (lambdaval * w2)) / n
+    # Partial derivative of new objective function with respect to weight input to hidden layer
+    w1_gradient = (w1_gradient + (lambdaval * w1)) / n
+    
     # calculating obj_grad
     obj_grad = np.array([])
     obj_grad = np.concatenate((w1_gradient.flatten(), w2_gradient.flatten()), 0)
@@ -262,37 +259,36 @@ def nnPredict(w1, w2, data):
 
     % Input:
     % w1: matrix of weights of connections from input layer to hidden layers.
-    %     w1(i, j) represents the weight of connection from unit i in input 
+    %     w1(i, j) represents the weight of connection from unit i in input
     %     layer to unit j in hidden layer.
     % w2: matrix of weights of connections from hidden layer to output layers.
-    %     w2(i, j) represents the weight of connection from unit i in input 
+    %     w2(i, j) represents the weight of connection from unit i in input
     %     layer to unit j in hidden layer.
-    % data: matrix of data. Each row of this matrix represents the feature 
+    % data: matrix of data. Each row of this matrix represents the feature
     %       vector of a particular image
-       
-    % Output: 
+
+    % Output:
     % label: a column vector of predicted labels"""
 
     labels = np.array([])
     # Your code here
-    #adding bias node in input vector
+    # adding bias node in input vector
     bias = np.ones(len(data))
-    data=np.column_stack([data,bias])   
-    #compute data*wtrans for input to hidden
-    ans1 = data.dot(w1.T)    
-    #compute sigmoid of data*wtrans
+    data = np.column_stack([data, bias])
+    # compute data*wtrans for input to hidden
+    ans1 = data.dot(w1.T)
+    # compute sigmoid of data*wtrans
     sig1 = sigmoid(ans1)
-    #adding bias node in hidden vector
-    sig_bias=np.ones(len(data))
-    sig1=np.column_stack([sig1,sig_bias])    
-    #compute sig1*wtrans for hidden to output
+    # adding bias node in hidden vector
+    sig_bias = np.ones(len(data))
+    sig1 = np.column_stack([sig1, sig_bias])
+    # compute sig1*wtrans for hidden to output
     ol = sig1.dot(w2.T)
-    #compute sigmoid of sig1*wtrans
+    # compute sigmoid of sig1*wtrans
     sig2 = sigmoid(ol)
-    #selecting max value for predicted label
+    # selecting max value for predicted label
     for each in range(sig2.shape[0]):
-        label[each] = np.argmax(sig2[each])       
-
+        label[each] = np.argmax(sig2[each])
 
     return labels
 
@@ -360,6 +356,6 @@ predicted_label = nnPredict(w1, w2, test_data)
 
 print('\n Test set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
 
-getTime = time.time()-timer
-print('\n It took: ' + str(getTime)+ 'seconds to complete')
+getTime = time.time() - timer
+print('\n It took: ' + str(getTime) + 'seconds to complete')
 
