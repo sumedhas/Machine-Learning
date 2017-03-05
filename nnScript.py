@@ -245,7 +245,7 @@ def nnObjFunction(params, *args):
     w2_gradient = (w2_gradient + (lambdaval * w2)) / n
     # Partial derivative of new objective function with respect to weight input to hidden layer
     w1_gradient = (w1_gradient + (lambdaval * w1)) / n
-    
+
     # calculating obj_grad
     obj_grad = np.array([])
     obj_grad = np.concatenate((w1_gradient.flatten(), w2_gradient.flatten()), 0)
@@ -281,14 +281,18 @@ def nnPredict(w1, w2, data):
     sig1 = sigmoid(ans1)
     # adding bias node in hidden vector
     sig_bias = np.ones(len(data))
+    #sig_bias = np.ones(sig1.shape[0])
     sig1 = np.column_stack([sig1, sig_bias])
     # compute sig1*wtrans for hidden to output
     ol = sig1.dot(w2.T)
     # compute sigmoid of sig1*wtrans
     sig2 = sigmoid(ol)
     # selecting max value for predicted label
+    '''
     for each in range(sig2.shape[0]):
-        label[each] = np.argmax(sig2[each])
+        labels[each] = np.argmax(sig2[each])
+    '''
+    labels = np.argmax(sig2,axis=1)
 
     return labels
 
@@ -357,5 +361,5 @@ predicted_label = nnPredict(w1, w2, test_data)
 print('\n Test set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
 
 getTime = time.time() - timer
-print('\n It took: ' + str(getTime) + 'seconds to complete')
+print('\n It took: ' + str(getTime) + ' seconds to complete')
 
